@@ -1,0 +1,64 @@
+#include "BluetoothSerial.h"
+BluetoothSerial SerialBT;
+
+// ---------- CONFIGURACIÓN DEL SISTEMA ----------
+#define RELAY_PIN  23        // Pin digital donde va el relé
+int tiempoRiego = 15000;     // Tiempo de riego en milisegundos (15 segundos)
+unsigned long intervalo = 6UL * 60UL * 60UL * 1000UL;  // Cada 6 horas
+unsigned long ultimoRiego = 0;
+
+bool modoManual = false;     // Indica si se controla desde Bluetooth
+
+void setup() {
+  Serial.begin(115200);
+  SerialBT.begin("RiegoSolar_ESP32");  // Nombre visible por Bluetooth
+
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);  // Relé apagado al inicio
+
+  Serial.println("🌞 Sistema de Riego Solar Automatizado Iniciado");
+  Serial.println("Esperando conexión Bluetooth...");
+  Serial.println("Comandos:");
+  Serial.println("1 = Activar riego manual");
+  Serial.println("0 = Apagar riego manual");
+  Serial.println("A = Modo automático");
+}
+
+void loop() {
+  // ----- CONTROL DESDE BLUETOOTH -----
+  if (SerialBT.available()) {
+    char comando = SerialBT.read();
+
+    if (comando == '1') {
+      modoManual = true;
+      activarRiego();
+      SerialBT.println("💧 Riego activado manualmente");
+    }
+    else if (comando == '0') {
+      modoManual = false;
+      digitalWrite(RELAY_PIN, LOW);
+      SerialBT.println("🚫 Riego desactivado manualmente");
+    }
+    else if (comando == 'A') {
+      modoManual = false;
+      SerialBT.println("🔁 Modo automático activado");
+    }
+  }
+
+  // ----- MODO AUTOMÁTICO -----
+  if (!modoManual && millis() - ultimoRiego >= intervalo) {
+    activarRiego();
+    ultimoRiego = millis();
+  }
+}
+
+// ---------- FUNCIÓN DE RIEGO ----------
+void activarRiego() {
+  Serial.println("💧 Iniciando riego...");
+  SerialBT.println("💧 Iniciando riego...");
+  digitalWrite(RELAY_PIN, HIGH);   // Activa la bomba
+  delay(tiempoRiego);              // Mantiene encendida el tiempo definido
+  digitalWrite(RELAY_PIN, LOW);    // Apaga la bomba
+  Serial.println("✅ Riego completado");
+  SerialBT.println("✅ Riego completado");
+}
