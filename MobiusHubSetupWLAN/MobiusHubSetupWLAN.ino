@@ -1,28 +1,39 @@
-// Bienvenido a Möbius, úsese este código en dispositivos ESP32.
-// Reportese y documentese cualquier error presente.
-// Z (Zona)
+// Bienvenido a Möbius, úsese este código en dispositivos ESP-32
+// Programa y Testeado solo para ESP-32
+// Licencia Apache v2.0
+// Reportese y documentese cualquier error presente
+// Z (Zona) / Motobombas
+// R (Relé) / Espejo Z
+// ! (Válvula) / Espejo Z
 // Configurese PIN, Hora Local, WiFI SSID, Contraseña, Horarios
 // WiFi Integrado (Deshabilitado Default)
 
+// Es posible que usted tenga que actualizar su dispositivo a la versión más reciente para utilizar algunas características
+// Después un apagón o desactivación de dispositivos, asegúrese de configurar nuevamente el Tiempo Local
+
+// Obtenga actualizaciones para MobiusHubSetupWLAN en https://fuckoffpast.framer.website/developer/möbius
+
 #include <WiFi.h>
 #include "time.h"
+
+// TODO: Motor de Autoguardado de Estados
 
 // Configuración WiFi
 const char* ssid = "Möbius Hub";
 const char* password = "Möbius@User/Hub";
 
-// Setup PIN Digital y LED
+// Setup PIN Digital y LED / Motobombas
 const int Z1 = 12;     // Configurese
 const int Z2 = 13;     // Configurese
 const int Z3 = 14;     // Configurese
 const int ledAzul = 2; // No Configurar o Modificar
 
-// PIN Espejo (!1, !2, !3)
+// PIN Espejo (!1, !2, !3) / Válvulas
 const int Z1_mirror = 15; // Configurese
 const int Z2_mirror = 16; // Configurese
 const int Z3_mirror = 17; // Configurese
 
-// PIN Relés (R1, R2, R3)
+// PIN Relés (R1, R2, R3) / Relés
 const int R1 = 18; // Configurese
 const int R2 = 19; // Configurese
 const int R3 = 21; // Configurese
@@ -46,14 +57,15 @@ struct HorarioRiego {
   int minutoFin;
 };
 
+// TODO: Integración de Motor de Autoguardado de Estados
 // Días de Riego L(1), X(3), V(5), D(0)
 const int diasRiego[] = {1, 3, 5, 0};
 const int numDiasRiego = 4;
 
 // Horarios de Riego
 HorarioRiego horarios[] = {
-  {10, 5, 10, 15},  // Configurese
-  {16, 40, 16, 50}  // Configurese
+  {6, 30, 6, 35},  // Configurese
+  {13, 50, 13, 55}  // Configurese
 };
 const int numHorarios = 2;
 
@@ -62,7 +74,7 @@ void setup() {
   delay(500);
   Serial.println("Iniciando Configuración...");
 
-  // Configuración de pines
+  // Configuración de PIN
   pinMode(Z1, OUTPUT);
   pinMode(Z2, OUTPUT);
   pinMode(Z3, OUTPUT);
@@ -81,7 +93,7 @@ void setup() {
   // Setup WiFi
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  Serial.print("Conectando WiFi: ");
+  Serial.print("Conectando WiFi ");
   Serial.println(ssid);
 
   unsigned long startAttemptTime = millis();
@@ -97,6 +109,8 @@ void setup() {
     Serial.print("IP Asignada ");
     Serial.println(WiFi.localIP());
   
+// Servidor NTP / Setup Tiempo Online / Requiere una Conexión a WiFi
+
     configTime(gmtOffset_sec, daylightOffset_sec, "pool.ntp.org");
     if (sincronizarHoraNTP()) {
       horaConfigurada = true;
@@ -221,6 +235,8 @@ bool estaEnHorario(struct tm timeinfo, HorarioRiego horario) {
   return (actual >= inicio && actual < fin);
 }
 
+// TODO: Integración de Motor de Autoguardado de Estados
+
 void activarBombas() {
   // Zonas Principales
   digitalWrite(Z1, HIGH); digitalWrite(Z2, HIGH); digitalWrite(Z3, HIGH);
@@ -229,6 +245,8 @@ void activarBombas() {
   // Relés
   digitalWrite(R1, HIGH); digitalWrite(R2, HIGH); digitalWrite(R3, HIGH);
 }
+
+// TODO: Integración de Motor de Autoguardado de Estados
 
 void desactivarBombas() {
   // Zonas Principales
@@ -245,6 +263,8 @@ void mostrarHoraActual() {
     Serial.println("Error de Obtención de Hora");
     return;
   }
+
+  // TODO: Integración de Motor de Autoguardado de Estados
 
   char buffer[50];
   strftime(buffer, sizeof(buffer), "Hora Actual: %A %Y-%m-%d %H:%M:%S", &timeinfo);
@@ -269,13 +289,17 @@ void configurarHoraManual() {
   setenv("TZ", "COT-5", 1);
   tzset();
 
-  struct tm timeinfo;      // 10 de Noviembre del 2025 / 10:00 / Default / Configurese
-  timeinfo.tm_year = 125;  // 1900 + 125 = 2025
-  timeinfo.tm_mon = 10;    // Noviembre / 0 o Enero
-  timeinfo.tm_mday = 10;
-  timeinfo.tm_hour = 10;
-  timeinfo.tm_min = 0;
-  timeinfo.tm_sec = 0;
+// Setup Tiempo
+// Configurese Adecuadamente / Formato Reloj 24Hrs / 1900 + AAA
+// TODO: Integración de Motor de Autoguardado de Estados
+
+  struct tm timeinfo;      // Estructura de Tiempo / 10 de Noviembre del 2025 / 06:00 / Default / Configurese
+  timeinfo.tm_year = 125;  // Año / 1900 + 125 = 2025
+  timeinfo.tm_mon = 10;    // Mes / Noviembre / 0 o Enero / 11 o Diciembre
+  timeinfo.tm_mday = 10;   // Día
+  timeinfo.tm_hour = 6;   // Hora
+  timeinfo.tm_min = 0;     // Minutos
+  timeinfo.tm_sec = 0;     // Segundos
 
   time_t t = mktime(&timeinfo);
   struct timeval now = {.tv_sec = t};

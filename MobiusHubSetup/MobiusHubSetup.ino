@@ -1,7 +1,14 @@
-// Bienvenido a Möbius, úsese este código en dispositivos ESP32. 
-// Reportese y documentese cualquier error presente.
+// Bienvenido a Möbius, úsese este código en dispositivos ESP-32
+// Reportese y documentese cualquier error presente
 // Z (Zona)
 // Configurese PIN, Hora Local
+// Capacidades Límitadas
+
+// Sin Actualizar
+
+// Incompatible con Equipo, Relé
+// Obsolecencia Cercana / Asegúrese de Actualizar a MobiusHubSetupWLAN antes de la fecha estípulada para seguir obteniendo las últimas características
+// Más información en https://fuckoffpast.framer.website/developer/möbius
 
 #include <WiFi.h>
 #include "time.h"
